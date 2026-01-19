@@ -254,7 +254,6 @@ export const GAME_CONFIG = {
 - Add sound effects and music
 - Create multiple arenas/levels
 - Add multiplayer support
-- Integrate NFT aliens (see original design docs)
 
 ---
 
