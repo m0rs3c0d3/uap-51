@@ -44,7 +44,8 @@ export class PIDController {
     this.lastI = this.ki * this.integral;
     
     // Derivative term: rate of change of error
-    const derivative = (error - this.prevError) / dt;
+    // Guard against division by zero on first frame (dt can be 0)
+    const derivative = dt > 0 ? (error - this.prevError) / dt : 0;
     this.lastD = this.kd * derivative;
     this.prevError = error;
     
