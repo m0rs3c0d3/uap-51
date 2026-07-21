@@ -25,11 +25,12 @@ Then open `http://localhost:5173` in your browser.
 
 - **Autonomous Flight Mode** — Watch the UAP evade lasers using real PID control algorithms
 - **Manual Control Mode** — Take the controls yourself and navigate the neon city
-- **5 Hostile Aliens** — Each with tracking lasers that predict your movement
-- **Cyberpunk City** — 60 neon buildings with glowing edges and dynamic lighting
-- **5000 Colorful Stars** — Immersive night sky backdrop
+- **5 Hostile Aliens** — Full alien bodies riding neon hover-pods, with tracking lasers that predict your movement
+- **Cyberpunk City** — 60 buildings with lit window facades, neon edges, rooftop antennas and blinking beacons
+- **Cinematic Night Sky** — 5000 twinkling stars, a haloed moon, and drifting nebula clouds
 - **Real-time Telemetry** — Altitude, velocity, evasion count, PID visualization
-- **Ultra-glow UAP** — Multiple layered glow effects with spinning rings
+- **Detailed Saucer** — Metallic lathed hull, glass dome, plasma core, chasing rim lights, tractor-beam under-glow, and velocity-based banking
+- **Bloom Post-Processing** — HDR bloom + ACES filmic tone mapping makes every neon surface genuinely glow
 
 ---
 
