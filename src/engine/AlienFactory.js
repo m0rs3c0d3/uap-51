@@ -1,12 +1,16 @@
 import * as THREE from 'three';
 import { GAME_CONFIG, COLORS } from '../utils/constants';
+import { createGlowTexture } from './SceneSetup';
 
 /**
  * Alien Factory Module
  *
  * Creates the hostile alien entities and their laser projectiles.
- * Aliens are positioned in a ring around the play area and have
- * colored heads with glowing eyes.
+ * Each alien is a classic grey riding a small hover-pod: elongated
+ * head with glowing eyes, slim torso and arms, and a saucer-shaped
+ * pod with a neon rim ring in the alien's signature hue.
+ *
+ * Aliens face +Z (Object3D.lookAt convention used by PhysicsEngine).
  */
 
 /**
@@ -24,48 +28,113 @@ export function createAliens(scene) {
     const y = 3 + Math.random() * 5;
 
     const alien = new THREE.Group();
-
-    // Head (elongated sphere with unique hue per alien)
-    const headGeometry = new THREE.SphereGeometry(1.2, 16, 16);
-    headGeometry.scale(0.8, 1.3, 0.9);
     const hue = i / GAME_CONFIG.ALIEN_COUNT;
-    const headMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color().setHSL(hue, 0.8, 0.35),
-      transparent: true,
-      opacity: 0.9
+    const signatureColor = new THREE.Color().setHSL(hue, 0.9, 0.5);
+
+    const skinMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setHSL(hue, 0.4, 0.45),
+      metalness: 0.2,
+      roughness: 0.6,
+      emissive: new THREE.Color().setHSL(hue, 0.8, 0.12)
     });
-    alien.add(new THREE.Mesh(headGeometry, headMaterial));
 
-    // Eye sockets (dark ellipses)
-    const eyeGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+    // Head (classic elongated grey-alien skull)
+    const headGeometry = new THREE.SphereGeometry(1.0, 24, 24);
+    headGeometry.scale(0.8, 1.25, 0.9);
+    const head = new THREE.Mesh(headGeometry, skinMaterial);
+    head.position.y = 1.1;
+    alien.add(head);
+
+    // Tapered chin
+    const chin = new THREE.Mesh(
+      new THREE.ConeGeometry(0.55, 1.0, 16),
+      skinMaterial
+    );
+    chin.position.set(0, 0.35, 0.15);
+    chin.rotation.x = Math.PI;
+    alien.add(chin);
+
+    // Eyes: large black almonds with glow behind them
+    const eyeGeometry = new THREE.SphereGeometry(0.32, 16, 16);
     eyeGeometry.scale(1.5, 1, 0.5);
-    const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x000000,
+      metalness: 0.9,
+      roughness: 0.1
+    });
 
-    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    leftEye.position.set(-0.35, 0.25, 0.7);
-    alien.add(leftEye);
-
-    const rightEye = new THREE.Mesh(eyeGeometry.clone(), eyeMaterial);
-    rightEye.position.set(0.35, 0.25, 0.7);
-    alien.add(rightEye);
-
-    // Eye glow (green glow behind the sockets)
     const eyeGlowMaterial = new THREE.MeshBasicMaterial({
       color: COLORS.ALIEN_EYES,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.7
     });
 
-    const leftGlow = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), eyeGlowMaterial);
-    leftGlow.position.set(-0.35, 0.25, 0.7);
-    alien.add(leftGlow);
+    [-1, 1].forEach(side => {
+      const eye = new THREE.Mesh(eyeGeometry.clone(), eyeMaterial);
+      eye.position.set(side * 0.35, 1.3, 0.62);
+      eye.rotation.z = side * -0.35;
+      alien.add(eye);
 
-    const rightGlow = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), eyeGlowMaterial);
-    rightGlow.position.set(0.35, 0.25, 0.7);
-    alien.add(rightGlow);
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 8), eyeGlowMaterial);
+      glow.position.set(side * 0.35, 1.3, 0.55);
+      alien.add(glow);
+    });
 
-    // Alien point light
-    alien.add(new THREE.PointLight(0x00ff44, 1, 12));
+    // Slim torso and arms
+    const torso = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.35, 0.9, 4, 12),
+      skinMaterial
+    );
+    torso.position.y = -0.5;
+    alien.add(torso);
+
+    [-1, 1].forEach(side => {
+      const arm = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.1, 0.9, 4, 8),
+        skinMaterial
+      );
+      arm.position.set(side * 0.55, -0.5, 0.1);
+      arm.rotation.z = side * 0.35;
+      alien.add(arm);
+    });
+
+    // Hover-pod: dark saucer with a neon rim in the signature hue
+    const podMaterial = new THREE.MeshStandardMaterial({
+      color: 0x151525,
+      metalness: 0.85,
+      roughness: 0.35
+    });
+    const podTop = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.35, 24), podMaterial);
+    podTop.position.y = -1.35;
+    alien.add(podTop);
+    const podBottom = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 24), podMaterial);
+    podBottom.position.y = -1.78;
+    podBottom.rotation.x = Math.PI;
+    alien.add(podBottom);
+
+    const podRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.1, 0.05, 8, 32),
+      new THREE.MeshBasicMaterial({ color: signatureColor })
+    );
+    podRing.rotation.x = Math.PI / 2;
+    podRing.position.y = -1.55;
+    alien.add(podRing);
+
+    // Thruster glow beneath the pod
+    const thrusterGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: createGlowTexture('rgba(120,255,180,0.7)', 'rgba(0,120,80,0.1)'),
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    }));
+    thrusterGlow.scale.setScalar(2.2);
+    thrusterGlow.position.y = -2.2;
+    alien.add(thrusterGlow);
+
+    // Alien point light in its signature color
+    const podLight = new THREE.PointLight(signatureColor, 1.2, 14);
+    podLight.position.y = -1.5;
+    alien.add(podLight);
 
     alien.position.set(x, y, z);
     alien.userData = {
@@ -90,28 +159,38 @@ export function createAliens(scene) {
 export function createLaser(scene, start, target) {
   const direction = new THREE.Vector3().subVectors(target, start).normalize();
 
+  // Hot white-green core bolt
   const laser = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08, 0.08, 3, 8),
-    new THREE.MeshBasicMaterial({
-      color: COLORS.LASER,
-      transparent: true,
-      opacity: 0.9
-    })
+    new THREE.CylinderGeometry(0.06, 0.06, 3, 8),
+    new THREE.MeshBasicMaterial({ color: 0xccffcc })
   );
   laser.position.copy(start);
   laser.lookAt(target);
   laser.rotateX(Math.PI / 2);
 
-  // Glow halo around laser bolt
+  // Additive glow sheath around the bolt
   const glow = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, 3, 8),
+    new THREE.CylinderGeometry(0.22, 0.22, 3.2, 8),
     new THREE.MeshBasicMaterial({
       color: COLORS.LASER,
       transparent: true,
-      opacity: 0.3
+      opacity: 0.5,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     })
   );
   laser.add(glow);
+
+  // Bright muzzle flare at the bolt tip
+  const flare = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createGlowTexture('rgba(180,255,180,0.9)', 'rgba(0,255,80,0.2)'),
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  }));
+  flare.scale.setScalar(1.4);
+  flare.position.y = 1.5;
+  laser.add(flare);
 
   scene.add(laser);
 

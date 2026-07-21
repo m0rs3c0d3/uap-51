@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PIDController } from '../utils/PIDController';
 import { GAME_CONFIG } from '../utils/constants';
-import { createScene, createCamera, createRenderer, createGround, createStars } from './SceneSetup';
+import { createScene, createCamera, createRenderer, createComposer, applyEnvironment, createGround, createStars } from './SceneSetup';
 import { createBuildings } from './BuildingFactory';
 import { createUAP } from './UAPFactory';
 import { createAliens } from './AlienFactory';
@@ -79,10 +79,12 @@ export class GameEngine {
     this.scene = createScene();
     this.camera = createCamera();
     this.renderer = createRenderer(this.canvas);
+    this.composer = createComposer(this.renderer, this.scene, this.camera);
+    applyEnvironment(this.renderer, this.scene);
 
     // Build the world
     createGround(this.scene);
-    createStars(this.scene);
+    this.env = createStars(this.scene);
     this.buildings = createBuildings(this.scene);
     this.uap = createUAP(this.scene);
     this.aliens = createAliens(this.scene);
@@ -194,6 +196,7 @@ export class GameEngine {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.composer.setSize(window.innerWidth, window.innerHeight);
   }
 
   handleKeyDown(e) {
@@ -235,8 +238,8 @@ export class GameEngine {
       this.update(dt, time);
     }
 
-    updateVisuals(this.uap, this.buildings, this.isBoosting, time);
-    this.renderer.render(this.scene, this.camera);
+    updateVisuals(this.uap, this.buildings, this.isBoosting, time, this.uapVelocity, this.env);
+    this.composer.render();
   };
 
   // --- Cleanup ---
@@ -246,6 +249,7 @@ export class GameEngine {
     window.removeEventListener('resize', this.handleResize);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+    this.composer.dispose();
     this.renderer.dispose();
   }
 }

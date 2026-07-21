@@ -62,6 +62,7 @@ export const COLORS = {
   UAP_CORE: 0x00ffff,
   UAP_GLOW: 0x0088ff,
   UAP_BOOST: 0xffaa00,
+  UAP_HULL: 0x9aa8bb,
   
   // Alien colors
   ALIEN_EYES: 0x00ff00,
